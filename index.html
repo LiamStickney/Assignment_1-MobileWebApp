@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!--
+HTML Application that shows off some basic Javascript and jQuery.
+Dynamically create divs that roam around the screen. Clicking on
+one changes its colour and each has its own number.
+Resizing puts the divs back in the center.
+-->
+<html>
+    <head>
+        <title>Assignment 1</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        
+        <style>
+            
+            body {
+                font-size: 0px;
+            }
+            
+            #buttonAdd {
+                background-color: #33bdef;
+            }
+            
+            #buttonAdd:hover {
+                background-color: #019ad2;
+            }
+            
+            #buttonAdd:active {
+                position: relative;
+                top: 1px;
+            }
+            
+            #buttonRemove {
+                background-color: #768d87;
+            }
+            
+            #buttonRemove:hover {
+                background-color: #6c7c7c;
+            }
+            
+            #buttonRemove:active {
+                position: relative;
+                top: 1px;
+            }
+            
+            #buttonRemoveAll {
+                background-color: #e4685d;
+            }
+            
+            #buttonRemoveAll:hover {
+                background-color: #eb675e;
+            }
+            
+            #buttonRemoveAll:active {
+                position: relative;
+                top: 1px;
+            }
+            
+            .button {
+                border: 1px solid #ffffff;
+                display: inline-block;
+                cursor: pointer;
+                color: #ffffff;
+                font-family: Arial;
+                font-size: 15px;
+                padding: 10px 25px;
+                text-decoration: none;
+                border-style: solid;
+                border-color: black;
+            }
+            
+            .box {
+                display: flex;
+                vertical-align: middle;
+                text-align: center;
+                color: white;
+                border-style: solid;
+                border-color: black;
+                z-index: -1;
+            }
+            
+            .blueBox {
+                background-color: blue;
+            }
+            
+            .redBox {
+                background-color: red;
+            }
+            
+            
+        </style>
+    </head>
+    <body>
+        <a href="#" class="button" id="buttonAdd">Add Box</a>
+        <a href="#" class="button" id="buttonRemove">Remove Box</a>
+        <a href="#" class="button" id="buttonRemoveAll">Remove All</a>
+        <div id="starter"></div>
+        
+        
+        <script>
+            $(document).ready(function() {
+                
+                //an array our boxes are added and removed from
+                var boxArray = [];
+                
+                
+                
+                //when clicking on a box (div), toggle the class of the box
+                $("body").on("click", "div", function() {
+                    var currentBox = $(this);
+                    currentBox.toggleClass("blueBox");
+                    currentBox.toggleClass("redBox");
+                })
+                
+                //add a new box
+                $("#buttonAdd").click(function() {
+                    create_box();
+                });
+                
+                //remove the most recent box
+                $("#buttonRemove").click(function() {
+                    remove_box();
+                });
+                
+                //remove all boxes
+                $("#buttonRemoveAll").click(function() {
+                    remove_all();
+                });
+                
+               
+
+                //adds a new div in the center of the screen
+                function create_box() {
+                    //each box has a random size and speed
+                    var randomNumSize = generateRandomInteger(1, 25);
+                    var randomYSpeed = generateRandomInteger(-10, 10);
+                    var randomXSpeed = generateRandomInteger(-10, 10);
+                    var $div = $("<div></div>");
+                    //all boxes are based on the same object
+                    var $box = $div.clone();
+                    $box.yspeed = randomYSpeed;
+                    $box.xspeed = randomXSpeed;
+                    //box is given the box class
+                    $box.addClass("box");
+                    //each box has a different css depending on its size
+                    $box.css({
+                    "line-height" : "$div.height()",
+                    "font-size" : randomNumSize + 'vmax'});
+                    $box.addClass('blueBox');
+                    //center the box
+                    $box.center();
+                    //add the box to the array
+                    boxArray.push($box);
+                    //the number on each box is based on the number of boxes in the array
+                    $box.html(boxArray.length);
+                    $box.appendTo("#starter");
+                    //the box moves every .1 seconds
+                    var intervalId = setInterval( function() {
+                        updateAnimation($box);
+                    }, 100);
+                    $box.data('intervalId', intervalId);
+                }
+                
+                //takes the last box in the array, removes it, and clears it's intervalID so it doesn't keep updating
+                function remove_box() {
+                    var lastBox = $("#starter").children().last();
+                    boxArray.pop();
+                    var intervalId = lastBox.data('intervalId');
+                    clearInterval(intervalId);
+                    lastBox.remove();
+                    
+                }
+                //goes though each box individually and reomves all of them and removes all intervalIDs
+                function remove_all() {
+                    for (i = boxArray.length; i > 0; i--) {
+                        var lastBox = $("#starter").children().last();
+                        boxArray.pop();
+                        var intervalId = lastBox.data('intervalId');
+                        clearInterval(intervalId);
+                        lastBox.remove();
+                    }
+                }
+                
+                //jQuery function that calculates the current center of the browser
+                jQuery.fn.center = function() {
+                    this.css("position", "absolute");
+                    this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + 
+                            $(window).scrollTop()) + "px");
+                    this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + 
+                            $(window).scrollLeft()) + "px");
+                    return this;
+                }
+                
+                //random integers for size and speed
+                function generateRandomInteger(min, max) {
+                    return Math.floor(min + Math.random()*(max + 1 - min));
+                }
+                
+                //the box moves until it hits the edge, then it turns around
+                function updateAnimation(box) {
+                    //if it hit the left or right edges, turns around
+                    if (parseInt(box.css('left')) <= -1 || (parseInt(box.css('left')) + box.outerWidth()) >= window.innerWidth) {
+                        box.xspeed = box.xspeed * -1;
+                    }
+                    //if it hit the top or bottom edges, turns around
+                    if (parseInt(box.css('top')) <= -1 || (parseInt(box.css('top')) + box.outerHeight()) >= window.innerHeight) {
+                        box.yspeed = box.yspeed * -1;
+                    }
+                    
+                    //checks if the box is now on the outside of the screen due to resizing
+                    box.isStuck();
+
+                    //update the position
+                    box.css('top', (parseInt(box.css('top')) + box.yspeed) + "px");
+                    box.css('left', (parseInt(box.css('left')) + box.xspeed) + "px");
+                }
+                
+                //if the box is no longer fully in the view of the screen, automatically send it back to the center
+                $.fn.isStuck = function() {
+                    if ((parseInt($(this).css('left')) + $(this).outerWidth()) >= (parseInt(window.innerWidth)) + 11) {
+                        $(this).center();
+                    }
+                    
+                    if ((parseInt($(this).css('top')) + $(this).outerHeight()) >= (parseInt(window.innerHeight)) + 11) {
+                        $(this).center();
+                    }
+                };
+                       
+
+        });
+        </script>
+    </body>
+</html>
